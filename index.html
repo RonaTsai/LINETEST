@@ -62,7 +62,6 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-// ↓↓↓ 換成你的 LIFF ID ↓↓↓
 const LIFF_ID = "2011473016-eTNk5845";
 
 const $ = id => document.getElementById(id);
@@ -73,11 +72,6 @@ const bool = b => b ? '<span class="yes">true</span>' : '<span class="no">false<
 const dump = {};
 
 async function main() {
-  if (LIFF_ID === "2011473016-eTNk5845") {
-    $('err').textContent = '請先把 LIFF_ID 換成你的 LIFF ID。';
-    return;
-  }
-
   await liff.init({ liffId: LIFF_ID });
 
   const inClient = liff.isInClient();
@@ -116,6 +110,7 @@ async function main() {
       row('userId', p.userId);
   } catch (e) {
     $('profile').innerHTML = row('讀取失敗', e.message, 'no');
+    dump.profileError = e.message;
   }
 
   // 好友狀態
@@ -140,6 +135,9 @@ main().catch(e => {
   console.error(e);
 });
 </script>
+
+</body>
+</html>
 
 </body>
 </html>

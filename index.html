@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LIFF 測試頁</title>
+<style>
+  body {
+    font-family: -apple-system, "Helvetica Neue", "PingFang TC", sans-serif;
+    margin: 0; padding: 20px; line-height: 1.6; color: #222;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .box { border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .box h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: #888; margin: 0 0 10px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 14px; }
+  .row span:first-child { color: #666; flex-shrink: 0; }
+  .row span:last-child { text-align: right; word-break: break-all; font-weight: 500; }
+  .yes { color: #06c755; }
+  .no  { color: #d33; }
+  pre { background: #f6f6f6; padding: 10px; border-radius: 6px; font-size: 12px; overflow-x: auto; margin: 0; }
+  button {
+    background: #06c755; color: #fff; border: 0; border-radius: 6px;
+    padding: 12px 18px; font-size: 15px; width: 100%; margin-top: 6px;
+  }
+  #err { color: #d33; font-size: 14px; }
+  .hint { font-size: 12px; color: #888; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>LIFF 測試頁</h1>
+<div class="sub">驗證登入流程、執行環境與 OA 好友狀態</div>
+
+<div class="box">
+  <h2>執行環境</h2>
+  <div id="env">載入中…</div>
+</div>
+
+<div class="box">
+  <h2>登入狀態</h2>
+  <div id="login">載入中…</div>
+</div>
+
+<div class="box">
+  <h2>使用者資料</h2>
+  <div id="profile">—</div>
+</div>
+
+<div class="box">
+  <h2>OA 好友狀態</h2>
+  <div id="friend">—</div>
+  <div class="hint">friendFlag 為 false 時，代表加好友選項沒生效或使用者未勾選。</div>
+</div>
+
+<div class="box">
+  <h2>原始資料</h2>
+  <pre id="raw">—</pre>
+</div>
+
+<div id="err"></div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+// ↓↓↓ 換成你的 LIFF ID ↓↓↓
+const LIFF_ID = "PASTE_YOUR_LIFF_ID_HERE";
+
+const $ = id => document.getElementById(id);
+const row = (k, v, cls) =>
+  `<div class="row"><span>${k}</span><span class="${cls || ''}">${v}</span></div>`;
+const bool = b => b ? '<span class="yes">true</span>' : '<span class="no">false</span>';
+
+const dump = {};
+
+async function main() {
+  if (LIFF_ID === "PASTE_YOUR_LIFF_ID_HERE") {
+    $('err').textContent = '請先把 LIFF_ID 換成你的 LIFF ID。';
+    return;
+  }
+
+  await liff.init({ liffId: LIFF_ID });
+
+  const inClient = liff.isInClient();
+  dump.environment = {
+    isInClient: inClient,
+    os: liff.getOS(),
+    lineVersion: liff.getLineVersion(),
+    liffVersion: liff.getVersion(),
+    language: liff.getLanguage()
+  };
+
+  $('env').innerHTML =
+    row('在 LINE 內開啟', bool(inClient)) +
+    row('OS', liff.getOS()) +
+    row('LINE 版本', liff.getLineVersion() || '（外部瀏覽器）') +
+    row('LIFF SDK', liff.getVersion());
+
+  const loggedIn = liff.isLoggedIn();
+  dump.isLoggedIn = loggedIn;
+  $('login').innerHTML = row('已登入', bool(loggedIn));
+
+  if (!loggedIn) {
+    $('login').innerHTML +=
+      '<button onclick="liff.login()">執行 liff.login()</button>' +
+      '<div class="hint">在 LINE 內通常不會走到這裡；外部瀏覽器才需要手動登入。</div>';
+    render();
+    return;
+  }
+
+  // 使用者資料
+  try {
+    const p = await liff.getProfile();
+    dump.profile = p;
+    $('profile').innerHTML =
+      row('displayName', p.displayName) +
+      row('userId', p.userId);
+  } catch (e) {
+    $('profile').innerHTML = row('讀取失敗', e.message, 'no');
+  }
+
+  // 好友狀態
+  try {
+    const f = await liff.getFriendship();
+    dump.friendship = f;
+    $('friend').innerHTML = row('friendFlag', bool(f.friendFlag));
+  } catch (e) {
+    $('friend').innerHTML = row('讀取失敗', e.message, 'no');
+    dump.friendshipError = e.message;
+  }
+
+  render();
+}
+
+function render() {
+  $('raw').textContent = JSON.stringify(dump, null, 2);
+}
+
+main().catch(e => {
+  $('err').textContent = 'liff.init 失敗：' + e.message;
+  console.error(e);
+});
+</script>
+
+</body>
+</html>

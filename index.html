@@ -63,7 +63,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 // ↓↓↓ 換成你的 LIFF ID ↓↓↓
-const LIFF_ID = "PASTE_YOUR_LIFF_ID_HERE";
+const LIFF_ID = "2011473016-eTNk5845";
 
 const $ = id => document.getElementById(id);
 const row = (k, v, cls) =>
@@ -73,7 +73,7 @@ const bool = b => b ? '<span class="yes">true</span>' : '<span class="no">false<
 const dump = {};
 
 async function main() {
-  if (LIFF_ID === "PASTE_YOUR_LIFF_ID_HERE") {
+  if (LIFF_ID === "2011473016-eTNk5845") {
     $('err').textContent = '請先把 LIFF_ID 換成你的 LIFF ID。';
     return;
   }
